@@ -1,0 +1,85 @@
+<%- include('partials/header') %>
+
+<div class="card shadow-sm border-0 mt-4 mb-5 mx-auto" style="max-width: 800px;">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0"><i class="bi bi-box-arrow-down"></i> Register New Shipment</h4>
+    </div>
+    <div class="card-body p-4">
+        <form action="/shipments/new" method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Sender Name</label>
+                    <% if (role === 'customer') { %>
+                        <input type="text" name="sender_name" class="form-control" value="<%= user.name %>" readonly>
+                    <% } else { %>
+                        <input type="text" name="sender_name" class="form-control" required>
+                    <% } %>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Receiver Name</label>
+                    <input type="text" name="receiver_name" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Sender Address</label>
+                    <textarea name="sender_address" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Receiver Address</label>
+                    <textarea name="receiver_address" class="form-control" rows="2" required></textarea>
+                </div>
+            </div>
+
+            <hr class="my-4">
+            
+            <h5 class="text-success mb-3"><i class="bi bi-box-seam"></i> Package Config</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Type</label>
+                    <select name="package_type" class="form-select">
+                        <option value="regular">Regular Box</option>
+                        <option value="document">Document</option>
+                        <option value="pallet">Pallet (B2B)</option>
+                        <option value="hazardous">Hazardous</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" step="0.01" name="weight_kg" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Dimensions</label>
+                    <input type="text" name="dimensions" placeholder="L x W x H cm" class="form-control">
+                </div>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Priority</label>
+                    <select name="shipment_type" class="form-select">
+                        <option value="standard">Standard</option>
+                        <option value="same-day">Same Day</option>
+                        <option value="next-day">Next Day Express</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="specialCheck" name="special_handling">
+                        <label class="form-check-label text-danger" for="specialCheck">Requires Special Handling (Fragile/Climate Control)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Handling Instructions / Notes</label>
+                <textarea name="instructions" class="form-control" rows="2" placeholder="Time window constraints or security protocol..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-save"></i> Save & Generate Tracking</button>
+        </form>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

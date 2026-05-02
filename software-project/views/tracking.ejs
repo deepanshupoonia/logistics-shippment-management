@@ -1,0 +1,71 @@
+<%- include('partials/header') %>
+
+<div class="card p-4 mt-4 text-center border-0 shadow-sm mx-auto" style="max-width: 600px;">
+    <h2 class="mb-4"><i class="bi bi-geo-alt text-success"></i> Track Your Shipment</h2>
+    <form action="/tracking" method="POST" class="d-flex">
+        <input type="text" name="tracking_number" class="form-control form-control-lg me-2" placeholder="e.g., GL-12345" required>
+        <button type="submit" class="btn btn-success btn-lg">Track</button>
+    </form>
+</div>
+
+<% if (error) { %>
+    <div class="alert alert-danger mt-4 mx-auto" style="max-width: 600px;"><%= error %></div>
+<% } %>
+
+<% if (shipment) { %>
+    <div class="card mt-5 shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Shipment Details</h4>
+            <span class="badge bg-light text-dark fs-6"><%= shipment.tracking_number %></span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <h5 class="text-muted"><i class="bi bi-box-seam"></i> Package Info</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-primary"><%= shipment.status.toUpperCase() %></span></li>
+                        <li class="list-group-item"><strong>Type:</strong> <%= shipment.package_type %> (<%= shipment.shipment_type %>)</li>
+                        <li class="list-group-item"><strong>Weight/Dim:</strong> <%= shipment.weight_kg %>kg | <%= shipment.dimensions || 'N/A' %></li>
+                        <li class="list-group-item"><strong>Special Handling:</strong> <%= shipment.special_handling ? 'Yes' : 'No' %></li>
+                    </ul>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <h5 class="text-muted"><i class="bi bi-signpost-split"></i> Route</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>From:</strong> <%= shipment.sender_name %> - <%= shipment.sender_address %></li>
+                        <li class="list-group-item"><strong>To:</strong> <%= shipment.receiver_name %> - <%= shipment.receiver_address %></li>
+                        <% if(shipment.notes || shipment.complaints) { %>
+                            <li class="list-group-item text-danger"><strong>Alerts:</strong> <%= shipment.complaints || shipment.notes %></li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+            
+            <% if (typeof history !== 'undefined' && history.length > 0) { %>
+                <h5 class="mt-4 text-muted"><i class="bi bi-clock-history"></i> Tracking History (<small>Retained securely for 6 months active</small>)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover mt-2 border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Status Update</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% history.forEach(h => { %>
+                                <tr>
+                                    <td><%= new Date(h.created_at).toLocaleString() %></td>
+                                    <td><span class="badge bg-secondary"><%= h.status %></span></td>
+                                    <td><%= h.notes || '-' %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+<% } %>
+
+<%- include('partials/footer') %>

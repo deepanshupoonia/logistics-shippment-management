@@ -1,0 +1,279 @@
+<%- include('partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-4 border-bottom pb-2">
+    <h2 class="text-success"><i class="bi bi-person-workspace"></i> <%= role.toUpperCase() %> DASHBOARD</h2>
+    <% if (role !== 'driver') { %>
+        <a href="/shipments/new" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> <%= role === 'customer' ? 'Place New Order' : 'Register Shipment' %></a>
+    <% } %>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <% if (role === 'customer') { %>
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <h4 class="card-title text-success mb-0"><i class="bi bi-box-seam text-dark"></i> My Submitted Orders</h4>
+                <a href="/shipments/new" class="btn btn-success px-4 py-2 shadow-sm rounded-pill fw-bold animate__animated animate__pulse animate__infinite">
+                    <i class="bi bi-rocket-takeoff"></i> Send a Package
+                </a>
+            </div>
+            
+            <div class="alert alert-info border-info bg-opacity-10 d-flex align-items-center"><i class="bi bi-info-circle-fill me-3 fs-3"></i> <div>Welcome! Track the status of packages you've sent through GreenLeaf Logistics here. Click "Send a Package" to create a new delivery order. Our Operations team will assign it to a driver shortly!</div></div>
+            
+            <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tracking No</th>
+                            <th>Receiver Details</th>
+                            <th>Package Info</th>
+                            <th>Current Status</th>
+                            <th>Track Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.shipments.forEach(s => { %>
+                            <tr>
+                                <td><span class="badge bg-dark"><%= s.tracking_number %></span><br><small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small></td>
+                                <td><strong><%= s.receiver_name %></strong><br><small><%= s.receiver_address %></small></td>
+                                <td><%= s.shipment_type %><br><small class="text-muted"><%= s.weight_kg %>kg | <%= s.dimensions %></small></td>
+                                <td>
+                                    <% let badgeColor = 'bg-secondary';
+                                       if(s.status==='registered') badgeColor='bg-info text-dark';
+                                       if(s.status==='ready_for_pickup') badgeColor='bg-primary';
+                                       if(s.status==='in_transit') badgeColor='bg-warning text-dark';
+                                       if(s.status==='delivered') badgeColor='bg-success';
+                                       if(s.status==='failed'||s.status==='held') badgeColor='bg-danger';
+                                    %>
+                                    <span class="badge <%= badgeColor %>"><%= s.status.toUpperCase() %></span>
+                                </td>
+                                <td><a href="/tracking/<%= s.tracking_number %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i> Track</a></td>
+                            </tr>
+                        <% }) %>
+                        <% if(data.shipments.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="bi bi-box2 text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-2">You haven't sent any packages yet. Click "Send a Package" above to get started!</p>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+        <% } else if (role === 'driver') { %>
+            <h4 class="card-title text-muted mb-4"><i class="bi bi-truck"></i> Daily Assigned Route</h4>
+            <div class="alert alert-info">Ensure compliance with driver shift hours and vehicle capabilities. Drive safe!</div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tracking No</th>
+                            <th>Receiver Address</th>
+                            <th>Status & Actions</th>
+                            <th>Report Issue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.shipments.forEach(s => { %>
+                            <tr>
+                                <td><strong><%= s.tracking_number %></strong><br><small><%= s.package_type %> | <%= s.weight_kg %>kg</small></td>
+                                <td><%= s.receiver_name %><br><small class="text-muted"><%= s.receiver_address %></small></td>
+                                <td>
+                                    <form action="/shipments/update" method="POST" class="d-flex align-items-center">
+                                        <input type="hidden" name="id" value="<%= s.id %>">
+                                        <select name="status" class="form-select form-select-sm me-2" style="width:130px;">
+                                            <option value="picked_up" <%= s.status === 'picked_up' ? 'selected' : '' %>>Picked Up</option>
+                                            <option value="in_transit" <%= s.status === 'in_transit' ? 'selected' : '' %>>In Transit</option>
+                                            <option value="delivered" <%= s.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                                            <option value="failed" <%= s.status === 'failed' ? 'selected' : '' %>>Failed Attempt</option>
+                                            <option value="returned" <%= s.status === 'returned' ? 'selected' : '' %>>Returned</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="/shipments/issue" method="POST" class="d-flex">
+                                        <input type="hidden" name="id" value="<%= s.id %>">
+                                        <input type="text" name="notes" placeholder="Reason..." class="form-control form-control-sm me-1">
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-exclamation-triangle"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+        <% } else if (role === 'warehouse') { %>
+            <h4 class="card-title text-muted mb-4"><i class="bi bi-box-seam-fill"></i> Warehouse Inventory & Manifests</h4>
+            <div class="alert alert-info">Click on a tracking number to view full shipment details, route info, and any reported issues. (Status updates restricted)</div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Shipment</th>
+                            <th>Type/Weight</th>
+                            <th>Handling</th>
+                            <th>Current Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.shipments.forEach(s => { %>
+                            <tr>
+                                <td>
+                                    <a href="/tracking/<%= s.tracking_number %>" class="fw-bold text-decoration-none">
+                                        <i class="bi bi-search"></i> <%= s.tracking_number %>
+                                    </a>
+                                    <br><span class="badge bg-info"><%= s.shipment_type %></span>
+                                </td>
+                                <td><%= s.package_type %><br><%= s.weight_kg %>kg | <%= s.dimensions %></td>
+                                <td><%= s.special_handling ? '⚠️ Yes' : 'No' %></td>
+                                <td>
+                                    <span class="badge bg-secondary"><%= s.status.toUpperCase() %></span>
+                                    <% if (s.complaints) { %>
+                                        <br><small class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Issue Logged</small>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+        <% } else if (role === 'customer_service') { %>
+            <h4 class="card-title text-muted mb-4"><i class="bi bi-headset"></i> Customer Support Center</h4>
+            
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                <div>
+                    <strong>Customer Service Tools:</strong> Unlike drivers, you can fully modify customer contact details, correct wrong addresses, log phone call notes, and physically intercept packages (Reschedule or Hold).
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border shadow-sm">
+                    <thead class="table-success text-dark">
+                        <tr>
+                            <th>Tracking No</th>
+                            <th>Customer Profile</th>
+                            <th>Status/Alerts</th>
+                            <th class="text-center">Manage Resolution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.shipments.forEach(s => { %>
+                            <tr class="<%= s.status === 'failed' ? 'table-danger' : '' %>">
+                                <td><a href="/tracking/<%= s.tracking_number %>" class="fw-bold text-decoration-none"><%= s.tracking_number %></a></td>
+                                <td><%= s.receiver_name %><br><small class="text-muted"><%= s.receiver_address %></small></td>
+                                <td>
+                                    <span class="badge <%= s.status === 'failed' ? 'bg-danger' : 'bg-primary' %>"><%= s.status.toUpperCase() %></span><br>
+                                    <% if(s.complaints) { %><small class="text-danger fw-bold"><i class="bi bi-exclamation-square-fill"></i> Log Active</small><% } %>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#csModal<%= s.id %>">
+                                        <i class="bi bi-wrench"></i> Resolve
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+        <% } else if (role === 'operations') { %>
+            <h4 class="card-title text-muted mb-4"><i class="bi bi-map"></i> Operations & Route Management</h4>
+            <div class="row mb-3">
+                <div class="col-3"><div class="card bg-light p-3 text-center"><h5><%= data.shipments.length %></h5><span>Total Active</span></div></div>
+                <div class="col-3"><div class="card bg-success text-white p-3 text-center"><h5>KPI</h5><span><2s Response</span></div></div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Tip:</strong> Look up available Driver IDs below before assigning routes. 
+                (For dummy data, Driver Steve is ID: <strong>2</strong>)
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tracking</th>
+                            <th>Shipment Details</th>
+                            <th>Assignments (Driver/Vehicle)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.shipments.forEach(s => { %>
+                            <tr>
+                                <td><%= s.tracking_number %><br><span class="badge bg-secondary"><%= s.status %></span></td>
+                                <td><strong>Fr:</strong> <%= s.sender_name %> <br><strong>To:</strong> <%= s.receiver_name %></td>
+                                <td>
+                                    <form action="/shipments/assign" method="POST" class="d-flex flex-column gap-1">
+                                        <input type="hidden" name="id" value="<%= s.id %>">
+                                        <input type="number" name="driver_id" placeholder="Driver ID (e.g. 2)" class="form-control form-control-sm" value="<%= s.driver_id || '' %>">
+                                        <input type="text" name="route_plan" placeholder="Route Plan/Window" class="form-control form-control-sm" value="<%= s.route_plan || '' %>">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Assign</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<% if (role === 'customer_service') { %>
+    <!-- Modals placed entirely outside of any potential z-index/fixed containers -->
+    <% data.shipments.forEach(s => { %>
+        <div class="modal fade" id="csModal<%= s.id %>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-warning">
+                    <form action="/shipments/cs-update" method="POST">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title"><i class="bi bi-headset"></i> Support Ticket: <%= s.tracking_number %></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                            <input type="hidden" name="id" value="<%= s.id %>">
+                            
+                            <h6 class="text-muted border-bottom pb-2">1. Modify Contact Info</h6>
+                            <div class="mb-2">
+                                <label class="form-label small">Receiver Name</label>
+                                <input type="text" name="receiver_name" class="form-control form-control-sm" value="<%= s.receiver_name %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Correction to Address</label>
+                                <textarea name="receiver_address" class="form-control form-control-sm" required><%= s.receiver_address %></textarea>
+                            </div>
+                            
+                            <h6 class="text-muted border-bottom pb-2 mt-4">2. Interaction Log</h6>
+                            <div class="mb-3">
+                                <label class="form-label small">Call Notes</label>
+                                <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="e.g. Customer provided gate code 1234..."></textarea>
+                            </div>
+                            
+                            <h6 class="text-muted border-bottom pb-2 mt-4">3. Delivery Override</h6>
+                            <div class="mb-2">
+                                <select name="action" class="form-select border-primary shadow-sm">
+                                    <option value="none">Save Changes Only</option>
+                                    <option value="reschedule">Reschedule (Removes Driver & Resets to Pickup)</option>
+                                    <option value="hold">Hold Package (Pause Delivery)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning fw-bold">Submit Resolution</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% }) %>
+<% } %>
+
+<%- include('partials/footer') %>

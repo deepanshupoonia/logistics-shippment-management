@@ -1,0 +1,71 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+    <h2 class="mb-4">User Management (Ops Manager)</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">Add New User</div>
+        <div class="card-body">
+            <form action="/users/add" method="POST">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" name="name" class="form-control" placeholder="Name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="email" name="email" class="form-control" placeholder="Email" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="password" name="password" class="form-control" placeholder="Password" required>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="role" class="form-control" required>
+                            <option value="customer">Customer</option>
+                            <option value="driver">Driver</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="customer_service">CS</option>
+                            <option value="operations">Ops Manager</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Add User</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% users.forEach(u => { %>
+                <tr>
+                    <td><%= u.id %></td>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td><span class="badge bg-secondary"><%= u.role %></span></td>
+                    <td><%= new Date(u.created_at).toLocaleString() %></td>
+                    <td>
+                        <% if(user.id !== u.id) { %>
+                        <form action="/users/delete/<%= u.id %>" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete user?');">Delete</button>
+                        </form>
+                        <% } else { %>
+                        <button class="btn btn-secondary btn-sm" disabled>Current</button>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('partials/footer') %>
